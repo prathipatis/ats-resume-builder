@@ -1,0 +1,992 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ATS Resume Builder</title>
+<style>
+:root{
+  --bg:#0a0c12;--s1:#10131c;--s2:#171a24;--bd:#222638;
+  --g:#00e5a0;--bl:#4f8eff;--r:#ff5f5f;--y:#fbbf24;
+  --t:#e8eaf2;--m:#8891a8;
+  --f:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;
+  --mono:'Courier New',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{min-height:100%;background:var(--bg);color:var(--t);font-family:var(--f);font-size:14px;}
+.wrap{max-width:920px;margin:0 auto;padding:24px 14px;}
+
+/* HEADER */
+.hdr{text-align:center;padding:20px 0 28px;}
+.hdr h1{font-family:var(--mono);font-size:clamp(15px,2.8vw,24px);
+  background:linear-gradient(135deg,var(--g),var(--bl));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:-0.5px;}
+.hdr p{color:var(--m);font-size:12px;margin-top:5px;}
+
+/* CARDS */
+.card{background:var(--s1);border:1px solid var(--bd);border-radius:12px;padding:18px;margin-bottom:14px;}
+.ct{font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:1.8px;
+  color:var(--g);margin-bottom:14px;display:flex;align-items:center;gap:7px;}
+.ct::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--g);}
+label{display:block;font-size:11px;color:var(--m);margin-bottom:4px;font-weight:600;}
+input,textarea{width:100%;background:var(--s2);border:1px solid var(--bd);border-radius:7px;
+  color:var(--t);font-family:var(--f);font-size:13px;padding:9px 11px;
+  outline:none;transition:border .18s;resize:vertical;}
+input:focus,textarea:focus{border-color:var(--g);}
+textarea{min-height:130px;line-height:1.55;}
+input[readonly]{opacity:.55;cursor:not-allowed;}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
+@media(max-width:500px){.g2{grid-template-columns:1fr;}}
+
+/* UPLOAD */
+.upz{border:2px dashed var(--bd);border-radius:10px;padding:24px 14px;text-align:center;
+  cursor:pointer;transition:all .2s;background:var(--s2);position:relative;overflow:hidden;}
+.upz:hover,.upz.drag{border-color:var(--g);background:rgba(0,229,160,.04);}
+.upz input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+.up-ico{font-size:26px;margin-bottom:7px;}
+.up-t{font-weight:700;font-size:13px;margin-bottom:3px;}
+.up-s{font-size:11px;color:var(--m);}
+.fmts{display:flex;justify-content:center;gap:5px;margin-top:8px;}
+.fmt{padding:2px 8px;border-radius:9px;font-size:10px;font-family:var(--mono);
+  background:rgba(79,142,255,.1);color:var(--bl);border:1px solid rgba(79,142,255,.18);}
+
+/* STATUS */
+.pst{font-size:11px;margin-top:7px;font-family:var(--mono);min-height:16px;
+  display:flex;align-items:center;gap:6px;}
+.pst.ok{color:var(--g);}
+.pst.err{color:var(--r);}
+.pst.ld{color:var(--y);}
+.spin{width:10px;height:10px;border:2px solid rgba(251,191,36,.25);
+  border-top-color:var(--y);border-radius:50%;animation:sp .7s linear infinite;flex-shrink:0;}
+@keyframes sp{to{transform:rotate(360deg);}}
+
+/* SAVED PROFILE BOX */
+.pbox{background:var(--s2);border:1px solid rgba(0,229,160,.2);border-radius:9px;padding:14px;}
+.pname{font-size:16px;font-weight:700;margin-bottom:3px;}
+.pmeta{font-size:11px;color:var(--m);margin-bottom:8px;line-height:1.6;}
+.ptags{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px;}
+.ptag{padding:2px 8px;border-radius:10px;font-size:9px;font-weight:700;font-family:var(--mono);
+  background:rgba(0,229,160,.08);color:var(--g);border:1px solid rgba(0,229,160,.14);}
+.pact{display:flex;gap:7px;flex-wrap:wrap;}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:5px;padding:8px 15px;border-radius:7px;
+  border:none;cursor:pointer;font-family:var(--mono);font-size:10px;font-weight:700;
+  text-transform:uppercase;letter-spacing:.5px;transition:all .17s;white-space:nowrap;}
+.bp{background:linear-gradient(135deg,var(--g),var(--bl));color:#000;}
+.bp:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 5px 18px rgba(0,229,160,.28);}
+.bp:disabled{opacity:.38;cursor:not-allowed;transform:none !important;}
+.bg{background:var(--s2);color:var(--m);border:1px solid var(--bd);font-size:9px;padding:6px 12px;}
+.bg:hover{border-color:var(--r);color:var(--r);}
+.bo{background:transparent;color:var(--t);border:1px solid var(--bd);}
+.bo:hover{border-color:var(--g);color:var(--g);}
+
+/* GO */
+.go{width:100%;padding:15px;border:none;border-radius:10px;cursor:pointer;
+  background:linear-gradient(135deg,var(--g),var(--bl));font-family:var(--mono);
+  font-size:13px;font-weight:700;color:#000;letter-spacing:.7px;text-transform:uppercase;
+  transition:all .2s;box-shadow:0 2px 16px rgba(0,229,160,.15);margin-top:11px;}
+.go:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 7px 26px rgba(0,229,160,.32);}
+.go:disabled{opacity:.38;cursor:not-allowed;transform:none;}
+
+/* PROGRESS */
+.pgw{display:none;margin-top:13px;}
+.steps{display:flex;margin-bottom:8px;}
+.stp{flex:1;text-align:center;font-size:9px;font-family:var(--mono);color:var(--m);
+  padding:6px 2px;border-bottom:2px solid var(--bd);transition:all .28s;}
+.stp.act{color:var(--g);border-color:var(--g);}
+.stp.dn{color:var(--bl);border-color:var(--bl);}
+.pgb{height:3px;background:var(--s2);border-radius:3px;overflow:hidden;}
+.pgf{height:100%;background:linear-gradient(90deg,var(--g),var(--bl));
+  border-radius:3px;width:0%;transition:width .45s ease;}
+.pgm{font-size:11px;color:var(--m);text-align:center;margin-top:6px;font-family:var(--mono);}
+
+/* RESULTS */
+.res{display:none;animation:fu .32s ease;}
+@keyframes fu{from{opacity:0;transform:translateY(7px);}to{opacity:1;transform:translateY(0);}}
+.rg{display:grid;grid-template-columns:1fr 1fr;gap:13px;margin-bottom:13px;}
+@media(max-width:540px){.rg{grid-template-columns:1fr;}}
+
+/* RING */
+.rw{text-align:center;}
+.rw svg{transform:rotate(-90deg);}
+.rbg{fill:none;stroke:var(--s2);stroke-width:10;}
+.rfl{fill:none;stroke-width:10;stroke-linecap:round;
+  stroke-dasharray:408;stroke-dashoffset:408;
+  transition:stroke-dashoffset 1.5s cubic-bezier(.4,0,.2,1);}
+.rn{font-family:var(--mono);font-size:22px;font-weight:700;}
+.rl{font-size:10px;color:var(--m);font-family:var(--mono);margin-top:2px;}
+.bdi{display:flex;align-items:center;justify-content:space-between;
+  padding:6px 0;border-bottom:1px solid var(--bd);}
+.bdi:last-child{border-bottom:none;}
+.bdl{font-size:10px;color:var(--m);}
+.bdr{display:flex;align-items:center;gap:7px;}
+.bdb{width:68px;height:3px;background:var(--s2);border-radius:3px;overflow:hidden;}
+.bdf{height:100%;border-radius:3px;transition:width .9s;}
+.bdv{font-family:var(--mono);font-size:10px;font-weight:700;width:28px;text-align:right;}
+
+/* KEYWORDS */
+.kwg{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px;}
+.kw{padding:2px 8px;border-radius:11px;font-size:10px;font-weight:700;font-family:var(--mono);}
+.ok{background:rgba(0,229,160,.1);color:var(--g);border:1px solid rgba(0,229,160,.18);}
+.no{background:rgba(255,95,95,.1);color:var(--r);border:1px solid rgba(255,95,95,.18);}
+hr{border:none;border-top:1px solid var(--bd);margin:11px 0;}
+
+/* CHECKLIST */
+.chk{display:flex;gap:9px;align-items:flex-start;padding:8px;border-radius:8px;
+  border:1px solid var(--bd);background:var(--s2);margin-bottom:6px;}
+.chk.pass{border-color:rgba(0,229,160,.2);}
+.chk.fail{border-color:rgba(255,95,95,.16);}
+.chi{font-size:13px;flex-shrink:0;margin-top:1px;}
+.cht{font-weight:700;font-size:11px;margin-bottom:2px;}
+.chd{font-size:10px;color:var(--m);line-height:1.45;}
+
+/* TIPS */
+.tip{display:flex;gap:8px;padding:8px;background:rgba(79,142,255,.06);
+  border-radius:7px;border:1px solid rgba(79,142,255,.13);margin-bottom:7px;font-size:11px;line-height:1.5;}
+
+/* LOC */
+.locw{position:relative;}
+.locbdg{display:none;position:absolute;right:8px;top:50%;transform:translateY(-50%);
+  font-size:9px;background:rgba(0,229,160,.13);color:var(--g);padding:1px 7px;
+  border-radius:9px;font-family:var(--mono);pointer-events:none;}
+.locr{display:none;font-size:10px;color:var(--m);margin-top:3px;}
+.locr button{background:none;border:none;color:var(--r);font-size:10px;
+  cursor:pointer;text-decoration:underline;padding:0;}
+
+/* PAPER PREVIEW */
+.paper{background:#fff;border-radius:5px;padding:42px 50px;color:#111;
+  font-family:Arial,Helvetica,sans-serif;font-size:10.5px;line-height:1.55;
+  box-shadow:0 5px 34px rgba(0,0,0,.55);max-height:800px;overflow-y:auto;}
+.pn{font-size:18px;font-weight:700;color:#0a0a0a;margin-bottom:2px;}
+.pc{font-size:9.5px;color:#222;padding-bottom:6px;border-bottom:1.5px solid #111;margin-bottom:12px;}
+.pc a{color:#222;text-decoration:none;}
+.ps{font-size:9.5px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;
+  color:#0a0a0a;border-bottom:1px solid #555;padding-bottom:2px;margin:14px 0 6px;}
+.pjr{display:flex;justify-content:space-between;align-items:baseline;gap:4px;flex-wrap:wrap;}
+.pjt{font-weight:700;font-size:10.5px;color:#0a0a0a;}
+.pjd{font-size:9.5px;color:#666;}
+.pjm{font-size:9.5px;color:#555;font-style:italic;margin-bottom:3px;}
+.pb{display:flex;gap:5px;margin-bottom:2px;padding-left:2px;font-size:9.8px;color:#1a1a1a;}
+.pdot{flex-shrink:0;}
+.psk{font-size:9.8px;margin-bottom:2px;}
+.pskc{font-weight:700;color:#0a0a0a;}
+.pp{font-size:10.5px;color:#1a1a1a;margin-bottom:4px;line-height:1.58;}
+
+/* DL ROW */
+.dlr{display:flex;gap:9px;flex-wrap:wrap;margin-top:12px;align-items:center;}
+.chip{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;
+  border-radius:16px;font-size:10px;font-family:var(--mono);font-weight:700;}
+.cg{background:rgba(0,229,160,.1);color:var(--g);border:1px solid rgba(0,229,160,.18);}
+
+/* HINT */
+.hint{font-size:10px;color:var(--m);text-align:center;margin-top:5px;}
+.hint.ok{color:var(--g);}
+
+/* TOAST */
+#toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%) translateY(10px);
+  background:var(--s2);border:1px solid var(--g);color:var(--t);padding:9px 18px;
+  border-radius:18px;font-family:var(--mono);font-size:11px;
+  box-shadow:0 5px 22px rgba(0,229,160,.18);z-index:9999;opacity:0;
+  transition:all .28s cubic-bezier(.34,1.56,.64,1);white-space:nowrap;pointer-events:none;}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="hdr">
+  <h1>⚡ ATS Resume Builder</h1>
+  <p>Upload resume once &rarr; paste any JD &rarr; download ATS-optimized PDF instantly</p>
+</div>
+
+<!-- PROFILE -->
+<div class="card" id="sec-up">
+  <div class="ct">Your Profile</div>
+  <div id="prof-saved" style="display:none;">
+    <div class="pbox">
+      <div class="pname" id="p-name">—</div>
+      <div class="pmeta" id="p-meta">—</div>
+      <div class="ptags" id="p-tags"></div>
+      <div class="pact">
+        <button class="btn bg" onclick="clearProfile()">🗑 Clear &amp; Re-upload</button>
+        <button class="btn bg" style="border-color:var(--bd);color:var(--m);" onclick="editProfile()">✏ Edit</button>
+      </div>
+    </div>
+  </div>
+  <div id="prof-input">
+    <div class="upz" id="dz">
+      <input type="file" id="fi" accept=".pdf,.docx,.doc,.txt" onchange="handleFile(event)">
+      <div class="up-ico">📄</div>
+      <div class="up-t">Drop your resume here or click to upload</div>
+      <div class="up-s">PDF, DOCX, or TXT — auto-fills all fields</div>
+      <div class="fmts"><span class="fmt">PDF</span><span class="fmt">DOCX</span><span class="fmt">TXT</span></div>
+    </div>
+    <div class="pst" id="pst"></div>
+    <div style="text-align:center;margin:11px 0;font-size:11px;color:var(--m);">— or fill manually —</div>
+    <div class="g2">
+      <div><label>Full Name *</label><input id="fn" placeholder="e.g. Satyasai P"></div>
+      <div>
+        <label>Location * <span style="font-weight:400;font-size:10px;">— auto from JD</span></label>
+        <div class="locw">
+          <input id="fl" placeholder="e.g. Houston, Texas">
+          <span class="locbdg" id="lbdg">AUTO</span>
+        </div>
+        <div class="locr" id="locr">Updated from JD. <button onclick="resetLoc()">↩ Reset</button></div>
+      </div>
+    </div>
+    <div class="g2">
+      <div><label>Phone *</label><input id="fph" placeholder="440-494-0634"></div>
+      <div><label>Email *</label><input id="fem" placeholder="you@email.com"></div>
+    </div>
+    <div class="g2">
+      <div>
+        <label>LinkedIn <span style="color:var(--g);font-size:9px;">🔒</span></label>
+        <input id="fli" value="linkedin.com/in/satyasai-pathipati-995321113" readonly>
+      </div>
+      <div><label>Years Experience</label><input id="fyr" type="number" min="0" max="50" placeholder="7"></div>
+    </div>
+    <div><label>Work Experience *</label>
+      <textarea id="fxp" placeholder="System Engineer II | Wells Fargo, USA | Feb 2025 – Present&#10;- RHEL/Linux admin, HPC cluster management, SLURM scheduler&#10;- Ansible automation, Splunk monitoring…" style="min-height:150px;"></textarea>
+    </div>
+    <div style="margin-top:10px;"><label>Education</label>
+      <input id="fed" placeholder="MS Computer Science — Youngstown State University, OH | 2018">
+    </div>
+    <div style="margin-top:10px;"><label>Key Skills (optional)</label>
+      <input id="fsk" placeholder="SLURM, RHEL, Ansible, GPFS, Kubernetes, Python, Splunk, NetApp">
+    </div>
+    <button class="btn bp" style="width:100%;margin-top:13px;padding:12px;" onclick="saveProfile()">
+      💾 Save Profile — Never Upload Again
+    </button>
+  </div>
+</div>
+
+<!-- JD -->
+<div class="card">
+  <div class="ct">Paste Job Description</div>
+  <textarea id="ijd" placeholder="Paste the complete job description here…" style="min-height:160px;"></textarea>
+  <button class="go" id="go" onclick="runBuild()" disabled>⚡ Build My ATS Resume</button>
+  <p class="hint" id="ghint">Save your profile above first</p>
+  <div class="pgw" id="pgw">
+    <div class="steps">
+      <div class="stp" id="s1">01 Parse</div>
+      <div class="stp" id="s2">02 Match</div>
+      <div class="stp" id="s3">03 Write</div>
+      <div class="stp" id="s4">04 Done</div>
+    </div>
+    <div class="pgb"><div class="pgf" id="pgf"></div></div>
+    <div class="pgm" id="pgm">Analyzing…</div>
+  </div>
+</div>
+
+<!-- RESULTS -->
+<div class="res" id="res">
+  <div class="rg">
+    <div class="card">
+      <div class="ct">ATS Score</div>
+      <div style="display:flex;gap:12px;align-items:flex-start;">
+        <div class="rw" style="flex-shrink:0;">
+          <svg viewBox="0 0 140 140" width="114" height="114">
+            <circle class="rbg" cx="70" cy="70" r="65"/>
+            <circle class="rfl" id="ring" cx="70" cy="70" r="65"/>
+          </svg>
+          <div style="margin-top:-5px;">
+            <div class="rn" id="rnum">—</div>
+            <div class="rl" id="rlbl">—</div>
+          </div>
+        </div>
+        <div id="bdown" style="flex:1;padding-top:3px;"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="ct">Keywords</div>
+      <label>✅ Found</label><div class="kwg" id="kwf"></div>
+      <hr>
+      <label>❌ Missing</label><div class="kwg" id="kwm"></div>
+    </div>
+  </div>
+  <div class="rg">
+    <div class="card"><div class="ct">Checklist</div><div id="cklist"></div></div>
+    <div class="card"><div class="ct">Insights</div><div id="tips"></div></div>
+  </div>
+  <div class="card">
+    <div class="ct" style="justify-content:space-between;flex-wrap:wrap;gap:5px;">
+      <span>Resume Preview</span>
+      <div style="display:flex;gap:4px;flex-wrap:wrap;">
+        <span class="chip cg">✅ ATS Safe</span>
+        <span class="chip cg">✅ Single Column</span>
+      </div>
+    </div>
+    <div class="paper" id="paper"><div style="color:#999;text-align:center;padding:36px;">Your resume will appear here…</div></div>
+    <div class="dlr">
+      <button class="btn bp" id="dlbtn" onclick="dlPDF()">⬇ Download PDF</button>
+      <button class="btn bo" onclick="cpyText()">📋 Copy Text</button>
+    </div>
+  </div>
+</div>
+
+</div><!-- /wrap -->
+<div id="toast"></div>
+
+<script>
+// ════════════════════════════════════════════════
+//  CONSTANTS
+// ════════════════════════════════════════════════
+const SK = 'ats_v4';
+const LI = 'linkedin.com/in/satyasai-pathipati-995321113';
+let prof = null, lastRaw = '', lastRes = null;
+
+// ════════════════════════════════════════════════
+//  STORAGE — uses window.storage (sandbox safe)
+//  falls back gracefully if unavailable
+// ════════════════════════════════════════════════
+async function storeSave(data) {
+  try {
+    if (window.storage) await window.storage.set(SK, JSON.stringify(data));
+  } catch(e) { /* silent */ }
+}
+async function storeLoad() {
+  try {
+    if (window.storage) {
+      const r = await window.storage.get(SK);
+      return r ? JSON.parse(r.value) : null;
+    }
+  } catch(e) { /* silent */ }
+  return null;
+}
+async function storeDelete() {
+  try { if (window.storage) await window.storage.delete(SK); } catch(e) {}
+}
+
+// ════════════════════════════════════════════════
+//  BOOT
+// ════════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', async () => {
+  document.getElementById('fli').value = LI;
+  const saved = await storeLoad();
+  if (saved) { prof = saved; prof.linkedin = LI; showProfile(saved); enableBuild(); }
+
+  const dz = document.getElementById('dz');
+  dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag'); });
+  dz.addEventListener('dragleave', () => dz.classList.remove('drag'));
+  dz.addEventListener('drop', e => {
+    e.preventDefault(); dz.classList.remove('drag');
+    if (e.dataTransfer.files[0]) processFile(e.dataTransfer.files[0]);
+  });
+});
+
+// ════════════════════════════════════════════════
+//  FILE UPLOAD
+// ════════════════════════════════════════════════
+function handleFile(e) { if (e.target.files[0]) processFile(e.target.files[0]); }
+
+async function processFile(file) {
+  const ext = file.name.split('.').pop().toLowerCase();
+  setSt('ld', `Reading ${file.name}…`, true);
+  try {
+    setSt('ld', `Sending to AI to extract fields…`, true);
+    await aiParseFile(file, ext);
+    setSt('ok', `✅ Fields filled from ${file.name} — review & Save`);
+    toast('📄 Parsed! Review fields then click Save Profile.');
+  } catch(e) {
+    setSt('err', '⚠ ' + e.message);
+    console.error(e);
+  }
+}
+
+// ════════════════════════════════════════════════
+//  DIRECT FILE → CLAUDE API
+//  Sends file as base64 document — Claude reads
+//  DOCX and PDF natively, no local parsing needed
+// ════════════════════════════════════════════════
+async function aiParseFile(file, ext) {
+  // Read file as base64
+  const base64 = await fileToBase64(file);
+
+  // Map extension to Claude-supported media type
+  let mediaType;
+  if (ext === 'pdf') mediaType = 'application/pdf';
+  else if (ext === 'docx' || ext === 'doc') mediaType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+  else if (ext === 'txt') {
+    // For TXT, send as plain text message instead
+    const text = await fileToText(file);
+    return await aiParseText(text);
+  } else {
+    const text = await fileToText(file);
+    return await aiParseText(text);
+  }
+
+  const resp = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 2500,
+      messages: [{
+        role: 'user',
+        content: [
+          {
+            type: 'document',
+            source: {
+              type: 'base64',
+              media_type: mediaType,
+              data: base64
+            }
+          },
+          {
+            type: 'text',
+            text: `Extract all resume information from this document. Return ONLY valid JSON with no markdown, no backticks, no explanation:
+{
+  "name": "full name of candidate",
+  "email": "email address",
+  "phone": "phone number exactly as written",
+  "location": "City, State",
+  "years_of_experience": "total years as a number",
+  "education": "Degree — University, Location | Year",
+  "skills": "comma-separated technical skills",
+  "experience": "complete work experience — every job title, company, dates, and all bullet points exactly as written in the document"
+}`
+          }
+        ]
+      }]
+    })
+  });
+
+  const data = await resp.json();
+  if (data.error) throw new Error(data.error.message || 'API error');
+  const raw = (data.content || []).map(b => b.text || '').join('');
+  fillFields(JSON.parse(raw.replace(/```json|```/g, '').trim()));
+}
+
+async function aiParseText(text) {
+  const resp = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 2500,
+      messages: [{
+        role: 'user',
+        content: `Extract all resume information. Return ONLY valid JSON, no markdown:
+{"name":"","email":"","phone":"","location":"City, State","years_of_experience":"number","education":"Degree — University | Year","skills":"comma list","experience":"full work history with all jobs titles companies dates bullets"}
+
+RESUME TEXT:
+${text.slice(0, 4000)}`
+      }]
+    })
+  });
+  const data = await resp.json();
+  if (data.error) throw new Error(data.error.message || 'API error');
+  const raw = (data.content || []).map(b => b.text || '').join('');
+  fillFields(JSON.parse(raw.replace(/```json|```/g, '').trim()));
+}
+
+function fillFields(p) {
+  const sv = (id, v) => {
+    const el = document.getElementById(id);
+    if (el && v && String(v).trim()) el.value = String(v).trim();
+  };
+  sv('fn', p.name);
+  sv('fem', p.email);
+  sv('fph', p.phone);
+  sv('fl', p.location);
+  sv('fyr', p.years_of_experience);
+  sv('fed', p.education);
+  sv('fsk', p.skills);
+  sv('fxp', p.experience);
+}
+
+function fileToBase64(file) {
+  return new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload = e => {
+      // result is "data:...;base64,XXXX" — strip the prefix
+      const b64 = e.target.result.split(',')[1];
+      res(b64);
+    };
+    r.onerror = () => rej(new Error('Could not read file'));
+    r.readAsDataURL(file);
+  });
+}
+
+function fileToText(file) {
+  return new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload = e => res(e.target.result);
+    r.onerror = () => rej(new Error('Could not read file'));
+    r.readAsText(file);
+  });
+}
+
+
+// ════════════════════════════════════════════════
+//  EXPERIENCE CLEANER
+// ════════════════════════════════════════════════
+function cleanXP(t) {
+  return (t||'')
+    .replace(/WellsFargo/gi,'Wells Fargo').replace(/Wells\s{2,}Fargo/gi,'Wells Fargo')
+    .replace(/System\s+[Ee]ngineer\s*-?\s*II/g,'System Engineer II')
+    .replace(/\bCurrent\b/g,'Present').replace(/\bTill [Dd]ate\b/gi,'Present')
+    .replace(/\bOngoing\b/gi,'Present').replace(/\bTill Now\b/gi,'Present')
+    .replace(/\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)(\d{4})\b/g,'$1 $2')
+    .replace(/\s*[-–—]\s*(?=Present|\d{4})/g,' – ')
+    .replace(/\n{3,}/g,'\n\n').trim();
+}
+
+// ════════════════════════════════════════════════
+//  PROFILE
+// ════════════════════════════════════════════════
+async function saveProfile() {
+  const name=document.getElementById('fn').value.trim();
+  const email=document.getElementById('fem').value.trim();
+  if(!name||!email){toast('⚠ Name and email required!');return;}
+  const p={name,email,
+    loc:document.getElementById('fl').value.trim(),
+    phone:document.getElementById('fph').value.trim(),
+    linkedin:LI,
+    yoe:document.getElementById('fyr').value.trim(),
+    xp:cleanXP(document.getElementById('fxp').value.trim()),
+    edu:document.getElementById('fed').value.trim(),
+    skills:document.getElementById('fsk').value.trim(),
+    saved:new Date().toLocaleString()
+  };
+  await storeSave(p);
+  prof=p; showProfile(p); enableBuild();
+  toast('✅ Profile saved! Paste any JD and build.');
+}
+
+function showProfile(p) {
+  document.getElementById('prof-input').style.display='none';
+  document.getElementById('prof-saved').style.display='block';
+  document.getElementById('p-name').textContent=p.name;
+  document.getElementById('p-meta').textContent=
+    [p.email,p.phone,p.loc,p.yoe?p.yoe+' yrs':'','Saved: '+(p.saved||'')].filter(Boolean).join(' · ');
+  const all=((p.xp||'')+(p.skills||'')).toLowerCase();
+  const tags=['RHEL','SLURM','xCAT','Ansible','Python','Kubernetes','Docker','AWS','Azure',
+    'GPFS','Spectrum Scale','Lustre','NetApp','InfiniBand','Omni-Path','Nagios',
+    'Splunk','ServiceNow','ITIL','Jenkins','VMware','HPC','Bright Cluster']
+    .filter(c=>all.includes(c.toLowerCase())).slice(0,14);
+  document.getElementById('p-tags').innerHTML=tags.map(t=>`<span class="ptag">${t}</span>`).join('');
+}
+
+async function clearProfile() {
+  await storeDelete(); prof=null;
+  document.getElementById('prof-input').style.display='block';
+  document.getElementById('prof-saved').style.display='none';
+  document.getElementById('go').disabled=true;
+  document.getElementById('ghint').className='hint';
+  document.getElementById('ghint').textContent='Save your profile above first';
+  ['fn','fl','fph','fem','fyr','fxp','fed','fsk'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('fli').value=LI;
+  toast('🗑 Profile cleared');
+}
+
+function editProfile() {
+  document.getElementById('prof-input').style.display='block';
+  document.getElementById('prof-saved').style.display='none';
+  if(!prof)return;
+  [['fn',prof.name],['fl',prof.loc],['fph',prof.phone],['fem',prof.email],
+   ['fyr',prof.yoe],['fxp',prof.xp],['fed',prof.edu],['fsk',prof.skills]]
+    .forEach(([id,v])=>document.getElementById(id).value=v||'');
+  document.getElementById('fli').value=LI;
+}
+
+function enableBuild(){
+  document.getElementById('go').disabled=false;
+  document.getElementById('ghint').className='hint ok';
+  document.getElementById('ghint').textContent='✅ Profile ready — paste JD and build';
+}
+
+// ════════════════════════════════════════════════
+//  LOCATION
+// ════════════════════════════════════════════════
+function animLoc(ov,nv){
+  const f=document.getElementById('fl');
+  f.style.transition='all .28s';f.style.borderColor='var(--y)';f.style.background='rgba(251,191,36,.06)';
+  setTimeout(()=>{
+    f.value=nv;f.dataset.orig=ov;
+    f.style.borderColor='var(--g)';f.style.background='rgba(0,229,160,.06)';
+    document.getElementById('lbdg').style.display='block';
+    document.getElementById('locr').style.display='block';
+    if(prof){prof.loc=nv;storeSave(prof);}
+    setTimeout(()=>{f.style.borderColor='';f.style.background='';},2000);
+  },300);
+  toast(`📍 Location → ${nv}`);
+}
+function resetLoc(){
+  const f=document.getElementById('fl');
+  const orig=f.dataset.orig||(prof?prof.loc:'');
+  f.value=orig;if(prof){prof.loc=orig;storeSave(prof);}
+  document.getElementById('lbdg').style.display='none';
+  document.getElementById('locr').style.display='none';
+  toast('↩ Location reset');
+}
+
+// ════════════════════════════════════════════════
+//  PROGRESS
+// ════════════════════════════════════════════════
+function setStep(n,pct,msg){
+  ['s1','s2','s3','s4'].forEach((id,i)=>{
+    document.getElementById(id).className='stp'+(i<n?' dn':i===n?' act':'');
+  });
+  document.getElementById('pgf').style.width=pct+'%';
+  document.getElementById('pgm').textContent=msg;
+}
+const delay=ms=>new Promise(r=>setTimeout(r,ms));
+
+// ════════════════════════════════════════════════
+//  BUILD
+// ════════════════════════════════════════════════
+async function runBuild(){
+  const jd=document.getElementById('ijd').value.trim();
+  if(!jd){toast('⚠ Paste a job description!');return;}
+  if(!prof){toast('⚠ Save profile first!');return;}
+  document.getElementById('go').disabled=true;
+  document.getElementById('pgw').style.display='block';
+  document.getElementById('res').style.display='none';
+  setStep(0,8,'Reading job description…');await delay(160);
+
+  const yoe=prof.yoe?prof.yoe+'+':'6+';
+  const loc=document.getElementById('fl').value.trim()||prof.loc||'';
+
+  const PROMPT=`You are a professional resume writer and ATS expert.
+Write a natural, human-sounding resume scoring 95–100% ATS.
+
+AVOID AI BUZZWORDS: spearheaded, leveraged, orchestrated, championed, utilized, streamlined
+USE NATURAL LANGUAGE: managed, built, ran, set up, handled, configured, maintained, worked with, cut, reduced
+
+CANDIDATE:
+Name: ${prof.name}
+Contact: ${loc} | ${prof.phone} | ${prof.email} | ${LI}
+Experience: ${yoe} years | Education: ${prof.edu||''}
+Skills: ${prof.skills||''}
+${cleanXP(prof.xp)}
+
+JOB DESCRIPTION:
+${jd}
+
+RULES:
+1. job_location: extract from JD (city/state or Remote/Hybrid)
+2. SUMMARY 3-4 sentences: state "${yoe} years Linux admin" + HPC years, name 3-4 JD tools naturally, end with exact JD job title
+3. HPC: SLURM + node count + xCAT/Bright Cluster Manager + InfiniBand/Omni-Path + job profiling
+4. STORAGE: IBM Spectrum Scale (GPFS) + Lustre + NFS + quota management + capacity monitoring
+5. MONITORING: "monitored system health" "L1/L2 operational support" "triaged incidents" "coordinated with vendors"
+6. Every bullet needs 1+ metric. 5-7 bullets per role.
+7. Technical Skills: 8 categories covering ALL JD keywords
+8. Format: plain text, ALL CAPS section headers, "- " bullets
+
+VALID JSON ONLY — no backticks:
+{"ats_score":97,"job_location":"City, State","ats_label":"Excellent Match",
+"score_breakdown":{"keyword_match":96,"skills_alignment":97,"experience_relevance":96,"education_match":98,"formatting":100},
+"keywords_found":["SLURM","RHEL"],"keywords_missing":[],
+"tips":["specific tip"],
+"resume_text":"FULL PLAIN TEXT RESUME ALL SECTIONS"}`;
+
+  setStep(1,32,'AI matching to JD…');
+  try{
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:4500,
+        messages:[{role:'user',content:PROMPT}]})
+    });
+    setStep(2,65,'Writing bullets…');await delay(260);
+    const data=await resp.json();
+    const raw=(data.content||[]).map(b=>b.text||'').join('');
+    lastRes=JSON.parse(raw.replace(/```json|```/g,'').trim());
+
+    if(lastRes.job_location&&lastRes.job_location.toLowerCase()!==loc.toLowerCase())
+      animLoc(loc,lastRes.job_location);
+
+    setStep(3,90,'Rendering…');await delay(180);
+    renderScore(lastRes);renderKW(lastRes);renderCK(lastRes);renderTips(lastRes);
+    lastRaw=lastRes.resume_text||'';
+    renderPaper(lastRaw);
+
+    setStep(3,100,'✅ Ready — download your PDF!');
+    document.getElementById('res').style.display='block';
+    document.getElementById('res').scrollIntoView({behavior:'smooth',block:'start'});
+    toast(`🎯 ATS ${lastRes.ats_score}% — PDF ready!`,5000);
+  }catch(err){
+    document.getElementById('pgm').textContent='❌ '+err.message;
+    console.error(err);
+  }
+  document.getElementById('go').disabled=false;
+}
+
+// ════════════════════════════════════════════════
+//  RENDER SCORE / KEYWORDS / CHECKLIST / TIPS
+// ════════════════════════════════════════════════
+function renderScore(r){
+  const sc=r.ats_score,col=sc>=90?'#00e5a0':sc>=75?'#fbbf24':'#ff5f5f';
+  setTimeout(()=>{const rg=document.getElementById('ring');rg.style.strokeDashoffset=408-(sc/100)*408;rg.style.stroke=col;},150);
+  let n=0;const iv=setInterval(()=>{
+    n=Math.min(n+2,sc);document.getElementById('rnum').textContent=n+'%';
+    document.getElementById('rnum').style.color=col;if(n>=sc)clearInterval(iv);
+  },16);
+  document.getElementById('rlbl').textContent=r.ats_label||'Excellent';
+  document.getElementById('bdown').innerHTML=Object.entries(r.score_breakdown||{}).map(([k,v])=>{
+    const c=v>=90?'#00e5a0':v>=75?'#fbbf24':'#ff5f5f';
+    const l=k.replace(/_/g,' ').replace(/\b\w/g,x=>x.toUpperCase());
+    return `<div class="bdi"><span class="bdl">${l}</span><div class="bdr">
+      <div class="bdb"><div class="bdf" style="width:${v}%;background:${c};"></div></div>
+      <span class="bdv" style="color:${c};">${v}%</span></div></div>`;
+  }).join('');
+}
+
+function renderKW(r){
+  document.getElementById('kwf').innerHTML=(r.keywords_found||[]).map(k=>`<span class="kw ok">${k}</span>`).join('')||
+    '<span style="font-size:10px;color:var(--m)">None detected</span>';
+  document.getElementById('kwm').innerHTML=(r.keywords_missing||[]).length
+    ?r.keywords_missing.map(k=>`<span class="kw no">${k}</span>`).join('')
+    :'<span style="font-size:10px;color:var(--g)">🎉 All matched!</span>';
+}
+
+function renderCK(r){
+  const rt=(r.resume_text||'').toLowerCase();
+  const has=t=>(Array.isArray(t)?t:t.split(',')).some(x=>rt.includes(x.trim()));
+  const items=[
+    {t:'💻 xCAT + Bright Cluster Manager',p:has(['xcat','bright cluster']),
+     ok:'xCAT and Bright Cluster Manager present.',no:'Add xCAT and Bright Cluster Manager.'},
+    {t:'🔗 SLURM + InfiniBand/Omni-Path + Job Profiling',
+     p:has(['slurm'])&&has(['infiniband','omni-path'])&&has(['job profiling','hpctoolkit','vtune']),
+     ok:'SLURM, interconnects, job profiling present.',no:'Add SLURM, InfiniBand/Omni-Path, job profiling.'},
+    {t:'🗄️ Spectrum Scale (GPFS) + Lustre',
+     p:has(['spectrum scale'])&&has(['gpfs'])&&has(['lustre']),
+     ok:'IBM Spectrum Scale (GPFS) and Lustre present.',no:'Add IBM Spectrum Scale (GPFS) and Lustre.'},
+    {t:'📡 L1/L2 + Monitoring Phrases',
+     p:has(['l1/l2'])&&has(['monitored system health','responded to']),
+     ok:'L1/L2 and monitoring phrases present.',no:'Add "L1/L2 operational support", "monitored system health".'},
+    {t:'📊 Quantified Bullets',
+     p:rt.includes('%')&&(rt.match(/\d+\+/g)||[]).length>=3,
+     ok:'Metrics present throughout.',no:'Add numbers: %, counts, uptime, time saved.'},
+    {t:'📋 Summary: Years + Hybrid/On-Prem',
+     p:has(['years of linux','6+ years','7+ years','hpc'])&&has(['hybrid','on-prem']),
+     ok:'Summary states Linux/HPC years and hybrid environment.',no:'Summary needs years + hybrid/on-prem language.'},
+  ];
+  document.getElementById('cklist').innerHTML=items.map(i=>
+    `<div class="chk ${i.p?'pass':'fail'}"><div class="chi">${i.p?'✅':'⚠️'}</div>
+    <div><div class="cht">${i.t}</div><div class="chd">${i.p?i.ok:i.no}</div></div></div>`
+  ).join('');
+}
+
+function renderTips(r){
+  document.getElementById('tips').innerHTML=(r.tips||[]).map(t=>
+    `<div class="tip"><span>${t.startsWith('✅')?'✅':'💡'}</span><span>${t}</span></div>`).join('');
+}
+
+// ════════════════════════════════════════════════
+//  PAPER PREVIEW
+// ════════════════════════════════════════════════
+function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+function parseLines(raw){
+  const SEC=/^([A-Z][A-Z\s&\/\-]{2,})$/;
+  const out=[];let inB=false;
+  const nm=(prof&&prof.name||'').split(' ')[0].toLowerCase();
+  for(const line of raw.split('\n')){
+    const t=line.trim();
+    if(!t){out.push({type:'blank'});continue;}
+    if(!inB&&(t.toLowerCase().startsWith(nm)||t.includes('@')||/^\+?\d[\d\s\-\(\)]{7,}/.test(t)))continue;
+    if(SEC.test(t)||(t===t.toUpperCase()&&t.length>3&&!t.includes('@')&&!t.includes('+')&&!/\d{4}/.test(t))){
+      inB=true;out.push({type:'sec',text:t});continue;
+    }
+    if(!inB)continue;
+    if(/^[-•]\s/.test(t)) out.push({type:'bul',text:t.replace(/^[-•]\s*/,'')});
+    else if(/\|/.test(t)&&!t.startsWith('|')){
+      const pts=t.split('|').map(p=>p.trim());
+      out.push({type:'job',title:pts[0],meta:pts.slice(1,-1).join(' | '),date:pts[pts.length-1]});
+    }else if(/^[A-Za-z &\/\-]+:\s/.test(t)){
+      const ci=t.indexOf(':');out.push({type:'skill',cat:t.slice(0,ci),val:t.slice(ci+1).trim()});
+    }else out.push({type:'para',text:t});
+  }
+  return out;
+}
+
+function renderPaper(raw){
+  const loc=(lastRes&&lastRes.job_location)||document.getElementById('fl').value;
+  const parts=[loc,prof.phone,prof.email].filter(Boolean).map(esc).join(' &nbsp;|&nbsp; ');
+  let h=`<div class="pn">${esc(prof.name)}</div>`;
+  h+=`<div class="pc">${parts} &nbsp;|&nbsp; <a href="https://${LI}" target="_blank">${esc(LI)}</a></div>`;
+  for(const ln of parseLines(raw)){
+    if(ln.type==='blank') h+='<div style="height:3px"></div>';
+    else if(ln.type==='sec') h+=`<div class="ps">${esc(ln.text)}</div>`;
+    else if(ln.type==='bul') h+=`<div class="pb"><span class="pdot">–</span><span>${esc(ln.text)}</span></div>`;
+    else if(ln.type==='job') h+=`<div class="pjr"><span class="pjt">${esc(ln.title)}</span><span class="pjd">${esc(ln.date)}</span></div>${ln.meta?`<div class="pjm">${esc(ln.meta)}</div>`:''}`;
+    else if(ln.type==='skill') h+=`<div class="psk"><span class="pskc">${esc(ln.cat)}:</span> ${esc(ln.val)}</div>`;
+    else h+=`<div class="pp">${esc(ln.text)}</div>`;
+  }
+  document.getElementById('paper').innerHTML=h;
+}
+
+// ════════════════════════════════════════════════
+//  PURE JS PDF GENERATOR — zero dependencies
+// ════════════════════════════════════════════════
+function dlPDF(){
+  if(!lastRaw){toast('⚠ Build your resume first!');return;}
+  const btn=document.getElementById('dlbtn');
+  btn.disabled=true; btn.textContent='⏳ Generating…';
+  try{
+    // Page setup (points)
+    const PW=612,PH=792,ML=54,MR=54,MT=50,MB=50,CW=504;
+
+    // Word wrap utility
+    function wrap(s,maxC){
+      const words=String(s||'').split(' ');const lines=[];let cur='';
+      for(const w of words){
+        if((cur+' '+w).trim().length>maxC){if(cur)lines.push(cur.trim());cur=w;}
+        else cur=cur?cur+' '+w:w;
+      }
+      if(cur.trim())lines.push(cur.trim());
+      return lines.length?lines:[''];
+    }
+
+    // Approx chars per line for given font size
+    function maxC(size,width){return Math.floor(width/(size*0.52));}
+
+    // PDF string escape
+    function pe(s){return String(s||'').replace(/\\/g,'\\\\').replace(/\(/g,'\\(').replace(/\)/g,'\\)');}
+
+    // Build page content streams
+    const pages=[];
+    let ops=[];
+    let y=PH-MT;
+
+    function newPage(){pages.push(ops.join('\n'));ops=[];y=PH-MT;}
+    function chk(need){if(y-need<MB)newPage();}
+
+    function txt(s,x,yy,sz,bold,rgb){
+      const[r,g,b]=rgb||[0,0,0];
+      ops.push(`${(r/255).toFixed(3)} ${(g/255).toFixed(3)} ${(b/255).toFixed(3)} rg`);
+      ops.push(`BT ${bold?'/F2':'/F1'} ${sz} Tf ${x.toFixed(1)} ${yy.toFixed(1)} Td (${pe(s)}) Tj ET`);
+    }
+
+    function rule(y1,lw,ri,gi,bi){
+      ops.push(`${(ri/255).toFixed(3)} ${(gi/255).toFixed(3)} ${(bi/255).toFixed(3)} RG ${lw} w ${ML.toFixed(1)} ${y1.toFixed(1)} m ${(ML+CW).toFixed(1)} ${y1.toFixed(1)} l S`);
+    }
+
+    // Header
+    const nm=prof.name||'';
+    const loc=(lastRes&&lastRes.job_location)||document.getElementById('fl').value;
+    const contactStr=[loc,prof.phone,prof.email,LI].filter(Boolean).join('  |  ');
+
+    txt(nm,ML,y,18,true,[10,10,10]); y-=22;
+    const clines=wrap(contactStr,maxC(9,CW));
+    clines.forEach(cl=>{txt(cl,ML,y,9,false,[55,55,55]);y-=12;});
+    y-=2; rule(y,1.2,20,20,20); y-=11;
+
+    // Body
+    for(const ln of parseLines(lastRaw)){
+      if(ln.type==='blank'){y-=3;continue;}
+
+      if(ln.type==='sec'){
+        chk(22);
+        txt(ln.text.toUpperCase(),ML,y,9.5,true,[10,10,10]);
+        y-=3; rule(y,0.6,80,80,80); y-=9;
+
+      }else if(ln.type==='bul'){
+        const wls=wrap(ln.text,maxC(9.5,CW-14));
+        chk(14); txt('\u2013',ML+2,y,9.5,false,[25,25,25]);
+        for(const bl of wls){chk(13);txt(bl,ML+12,y,9.5,false,[25,25,25]);y-=13;}
+
+      }else if(ln.type==='job'){
+        chk(16);
+        txt(ln.title,ML,y,10,true,[10,10,10]);
+        if(ln.date){
+          const dw=ln.date.length*9*0.52;
+          txt(ln.date,ML+CW-dw,y,9,false,[80,80,80]);
+        }
+        y-=13;
+        if(ln.meta){chk(12);txt(ln.meta,ML,y,9,false,[90,90,90]);y-=11;}
+
+      }else if(ln.type==='skill'){
+        chk(14);
+        const label=ln.cat+': ';
+        const lw=label.length*9.5*0.52;
+        txt(label,ML,y,9.5,true,[10,10,10]);
+        const vls=wrap(ln.val,maxC(9.5,CW-lw));
+        txt(vls[0]||'',ML+lw,y,9.5,false,[40,40,40]);y-=13;
+        for(let i=1;i<vls.length;i++){chk(13);txt(vls[i],ML+lw,y,9.5,false,[40,40,40]);y-=13;}
+
+      }else if(ln.type==='para'){
+        const pls=wrap(ln.text,maxC(9.5,CW));
+        for(const pl of pls){chk(13);txt(pl,ML,y,9.5,false,[25,25,25]);y-=13;}
+      }
+    }
+    if(ops.length)pages.push(ops.join('\n'));
+
+    // Assemble PDF
+    let pdf='%PDF-1.4\n';
+    const off={};
+
+    // Font resources
+    off[2]=pdf.length;
+    pdf+=`2 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>\nendobj\n`;
+    off[3]=pdf.length;
+    pdf+=`3 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>\nendobj\n`;
+
+    let nid=4;
+    const sids=[],pids=[];
+
+    for(let i=0;i<pages.length;i++){
+      const sid=nid++,pid=nid++;
+      sids.push(sid);pids.push(pid);
+      const s=pages[i];
+      off[sid]=pdf.length;
+      pdf+=`${sid} 0 obj\n<< /Length ${s.length} >>\nstream\n${s}\nendstream\nendobj\n`;
+      off[pid]=pdf.length;
+      pdf+=`${pid} 0 obj\n<< /Type /Page /Parent 1 0 R /MediaBox [0 0 ${PW} ${PH}] /Contents ${sid} 0 R /Resources << /Font << /F1 2 0 R /F2 3 0 R >> >> >>\nendobj\n`;
+    }
+
+    // Pages
+    off[1]=pdf.length;
+    pdf+=`1 0 obj\n<< /Type /Pages /Kids [${pids.map(p=>p+' 0 R').join(' ')}] /Count ${pages.length} >>\nendobj\n`;
+
+    // Catalog
+    const catId=nid++;
+    off[catId]=pdf.length;
+    pdf+=`${catId} 0 obj\n<< /Type /Catalog /Pages 1 0 R >>\nendobj\n`;
+
+    // xref
+    const xrefOff=pdf.length;
+    pdf+=`xref\n0 ${catId+1}\n0000000000 65535 f \n`;
+    for(let id=1;id<=catId;id++)
+      pdf+=String(off[id]||0).padStart(10,'0')+' 00000 n \n';
+    pdf+=`trailer\n<< /Size ${catId+1} /Root ${catId} 0 R >>\nstartxref\n${xrefOff}\n%%EOF`;
+
+    // Download
+    const bytes=new Uint8Array(pdf.length);
+    for(let i=0;i<pdf.length;i++) bytes[i]=pdf.charCodeAt(i)&0xff;
+    const blob=new Blob([bytes],{type:'application/pdf'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;
+    a.download=(prof.name||'Resume').replace(/\s+/g,'_')+'_ATS_Resume.pdf';
+    document.body.appendChild(a);a.click();
+    setTimeout(()=>{document.body.removeChild(a);URL.revokeObjectURL(url);},500);
+    toast('✅ PDF downloaded!');
+  }catch(e){toast('❌ '+e.message);console.error(e);}
+  btn.disabled=false;btn.textContent='⬇ Download PDF';
+}
+
+// ════════════════════════════════════════════════
+//  COPY / STATUS / TOAST
+// ════════════════════════════════════════════════
+function cpyText(){
+  if(!lastRaw){toast('⚠ Build your resume first!');return;}
+  navigator.clipboard.writeText(lastRaw).then(()=>toast('📋 Copied!'));
+}
+
+function setSt(cls,msg,spin=false){
+  const el=document.getElementById('pst');
+  el.className='pst '+cls;
+  el.innerHTML=spin?`<div class="spin"></div><span>${msg}</span>`:msg;
+}
+
+function toast(msg,dur=3000){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),dur);
+}
+</script>
+</body>
+</html>
